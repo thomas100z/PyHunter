@@ -26,6 +26,9 @@ PyHunter supports all the methods from the [Hunter.io](https://hunter.io/api/v2/
 * `email_verifier`
 * `email_count`
 * `account_information`
+* `email_enrichment`
+* `company_enrichment`
+* `combined_enrichment`
 
 PyHunter also supports new methods from the `Leads` and `Leads Lists` APIs.
 
@@ -93,6 +96,25 @@ And you can finally check your account information (PyHunter adds the number of 
 hunter.account_information()
 ```
 
+You can retrieve the details of a person with their email address or LinkedIn handle:
+
+```python
+hunter.email_enrichment(email='francois@hunter.io')
+```
+
+You can find information about a company using its domain name:
+
+```python
+hunter.company_enrichment('hunter.io')
+```
+
+And you can also combine both person and company information:
+
+```python
+hunter.combined_enrichment('francois@hunter.io')
+```
+If no information is found, these enrichment methods return an empty
+dictionary.
 
 **NOTE:** By default, all of the calls (except `email_verifier()`) return the 'data' element
 of the JSON response. You can get the "raw" response by passing `raw=True` to those calls.
