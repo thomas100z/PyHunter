@@ -1,6 +1,11 @@
 import requests
 
-from .exceptions import MissingCompanyError, MissingNameError, HunterApiError
+from .exceptions import (
+    MissingCompanyError,
+    MissingNameError,
+    HunterApiError,
+    PyhunterError,
+)
 
 
 class PyHunter:
@@ -208,6 +213,79 @@ class PyHunter:
         res['calls']['left'] = res['calls']['available'] - res['calls']['used']
 
         return res
+
+    def email_enrichment(self, email=None, linkedin_handle=None,
+                         clearbit_format=None, raw=False):
+        """
+        Returns all the information associated with an email address or
+        LinkedIn handle.
+
+        :param email: The email address to search for.
+        :param linkedin_handle: The LinkedIn profile handle to search for.
+        :param clearbit_format: When provided with any value, the response will
+        be formatted according to Clearbit's schema.
+        :param raw: Gives back the entire response instead of just the 'data'.
+        :return: Full payload of the query as a dict.
+        """
+        if not email and not linkedin_handle:
+            raise PyhunterError(
+                'You must supply an email or a LinkedIn handle'
+            )
+
+        params = self.base_params
+
+        if email:
+            params['email'] = email
+        if linkedin_handle:
+            params['linkedin_handle'] = linkedin_handle
+        if clearbit_format:
+            params['clearbit_format'] = clearbit_format
+
+        endpoint = self.base_endpoint.format('people/find')
+
+        return self._query_hunter(endpoint, params, raw=raw)
+
+    def company_enrichment(self, domain, clearbit_format=None, raw=False):
+        """
+        Returns all the information associated with a domain name.
+
+        :param domain: The domain name to search for.
+        :param clearbit_format: When provided with any value, the response will
+        be formatted according to Clearbit's schema.
+        :param raw: Gives back the entire response instead of just the 'data'.
+        :return: Full payload of the query as a dict.
+        """
+        if not domain:
+            raise MissingCompanyError('You must supply a domain name')
+
+        params = {'domain': domain, 'api_key': self.api_key}
+
+        if clearbit_format:
+            params['clearbit_format'] = clearbit_format
+
+        endpoint = self.base_endpoint.format('companies/find')
+
+        return self._query_hunter(endpoint, params, raw=raw)
+
+    def combined_enrichment(self, email, clearbit_format=None, raw=False):
+        """
+        Returns all the information associated with an email address and its
+        domain name.
+
+        :param email: The email address to search for.
+        :param clearbit_format: When provided with any value, the response will
+        be formatted according to Clearbit's schema.
+        :param raw: Gives back the entire response instead of just the 'data'.
+        :return: Full payload of the query as a dict.
+        """
+        params = {'email': email, 'api_key': self.api_key}
+
+        if clearbit_format:
+            params['clearbit_format'] = clearbit_format
+
+        endpoint = self.base_endpoint.format('combined/find')
+
+        return self._query_hunter(endpoint, params, raw=raw)
 
     def get_leads(self, offset=None, limit=None, lead_list_id=None,
                   first_name=None, last_name=None, email=None, company=None,
