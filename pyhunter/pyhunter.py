@@ -232,6 +232,7 @@ class PyHunter:
         :param raw: Gives back the entire response instead of just the 'data'.
         :return: Full payload of the query as a dict, or an empty dict if the
         person cannot be found.
+
         """
         if not email and not linkedin_handle:
             raise PyhunterError(
