@@ -113,7 +113,8 @@ And you can also combine both person and company information:
 ```python
 hunter.combined_enrichment('francois@hunter.io')
 ```
-
+If no information is found, these enrichment methods return an empty
+dictionary.
 
 **NOTE:** By default, all of the calls (except `email_verifier()`) return the 'data' element
 of the JSON response. You can get the "raw" response by passing `raw=True` to those calls.

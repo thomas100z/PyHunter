@@ -15,10 +15,15 @@ class PyHunter:
         self.base_endpoint = 'https://api.hunter.io/v2/{}'
 
     def _query_hunter(self, endpoint, params, request_type='get',
-                      payload=None, headers=None, raw=False):
+                      payload=None, headers=None, raw=False,
+                      handle_not_found=False):
 
         request_kwargs = dict(params=params, json=payload, headers=headers)
         res = getattr(requests, request_type)(endpoint, **request_kwargs)
+        if res.status_code == 404 and handle_not_found:
+            if raw:
+                return res
+            return {}
         res.raise_for_status()
 
         if raw:
@@ -225,7 +230,9 @@ class PyHunter:
         :param clearbit_format: When provided with any value, the response will
         be formatted according to Clearbit's schema.
         :param raw: Gives back the entire response instead of just the 'data'.
-        :return: Full payload of the query as a dict.
+        :return: Full payload of the query as a dict, or an empty dict if the
+        person cannot be found.
+
         """
         if not email and not linkedin_handle:
             raise PyhunterError(
@@ -243,7 +250,8 @@ class PyHunter:
 
         endpoint = self.base_endpoint.format('people/find')
 
-        return self._query_hunter(endpoint, params, raw=raw)
+        return self._query_hunter(endpoint, params, raw=raw,
+                                  handle_not_found=True)
 
     def company_enrichment(self, domain, clearbit_format=None, raw=False):
         """
@@ -253,7 +261,8 @@ class PyHunter:
         :param clearbit_format: When provided with any value, the response will
         be formatted according to Clearbit's schema.
         :param raw: Gives back the entire response instead of just the 'data'.
-        :return: Full payload of the query as a dict.
+        :return: Full payload of the query as a dict, or an empty dict if the
+        company cannot be found.
         """
         if not domain:
             raise MissingCompanyError('You must supply a domain name')
@@ -265,7 +274,8 @@ class PyHunter:
 
         endpoint = self.base_endpoint.format('companies/find')
 
-        return self._query_hunter(endpoint, params, raw=raw)
+        return self._query_hunter(endpoint, params, raw=raw,
+                                  handle_not_found=True)
 
     def combined_enrichment(self, email, clearbit_format=None, raw=False):
         """
@@ -276,7 +286,8 @@ class PyHunter:
         :param clearbit_format: When provided with any value, the response will
         be formatted according to Clearbit's schema.
         :param raw: Gives back the entire response instead of just the 'data'.
-        :return: Full payload of the query as a dict.
+        :return: Full payload of the query as a dict, or an empty dict if no
+        information can be found.
         """
         params = {'email': email, 'api_key': self.api_key}
 
@@ -285,7 +296,8 @@ class PyHunter:
 
         endpoint = self.base_endpoint.format('combined/find')
 
-        return self._query_hunter(endpoint, params, raw=raw)
+        return self._query_hunter(endpoint, params, raw=raw,
+                                  handle_not_found=True)
 
     def get_leads(self, offset=None, limit=None, lead_list_id=None,
                   first_name=None, last_name=None, email=None, company=None,
